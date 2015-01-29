@@ -14,6 +14,7 @@ namespace Json {
 
 // writer.h
 class FastWriter;
+class NewFastWriter;
 class StyledWriter;
 
 // reader.h

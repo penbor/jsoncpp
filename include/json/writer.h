@@ -215,6 +215,45 @@ private:
   bool omitEndingLineFeed_;
 };
 
+/** \brief Outputs a Value in <a HREF="http://www.json.org">JSON</a> format
+ *without formatting (not human friendly).
+ *
+ * (We needed to add fields to FastWriter without breaking binary compatibility,
+ *  hence this copy.)
+ *
+ * The JSON document is written in a single line. It is not intended for 'human'
+ *consumption,
+ * but may be usefull to support feature such as RPC where bandwith is limited.
+ * \sa Reader, Value
+ */
+class JSON_API NewFastWriter : public Writer {
+public:
+  NewFastWriter();
+  virtual ~NewFastWriter() {}
+
+  void enableYAMLCompatibility();
+
+  /** \brief Drop the "null" string from the writer's output for nullValues.
+   * Strictly speaking, this is not valid JSON. But when the output is being
+   * fed to a browser's Javascript, it makes for smaller output and the
+   * browser can handle the output just fine.
+   */
+  void dropNullPlaceholders();
+
+  void omitEndingLineFeed();
+
+public: // overridden from Writer
+  virtual std::string write(const Value& root);
+
+private:
+  void writeValue(const Value& value);
+
+  std::string document_;
+  bool yamlCompatiblityEnabled_;
+  bool dropNullPlaceholders_;
+  bool omitEndingLineFeed_;
+};
+
 /** \brief Writes a Value in <a HREF="http://www.json.org">JSON</a> format in a
  *human friendly way.
  *
