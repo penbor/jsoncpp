@@ -40,17 +40,14 @@ typedef std::auto_ptr<CharReader>   CharReaderPtr;
 // ////////////////////////////////
 
 Features::Features()
-    : allowComments_(true), strictRoot_(false),
-      allowDroppedNullPlaceholders_(false), allowNumericKeys_(false) {}
-
+    : allowComments_(true), strictRoot_(false)
+{}
 Features Features::all() { return Features(); }
 
 Features Features::strictMode() {
   Features features;
   features.allowComments_ = false;
   features.strictRoot_ = true;
-  features.allowDroppedNullPlaceholders_ = false;
-  features.allowNumericKeys_ = false;
   return features;
 }
 
@@ -180,15 +177,6 @@ bool Reader::readValue() {
     currentValue().swapPayload(v);
     }
     break;
-  case tokenArraySeparator:
-    if (features_.allowDroppedNullPlaceholders_) {
-      // "Un-read" the current token and mark the current value as a null
-      // token.
-      current_--;
-      Value v;
-      currentValue().swapPayload(v);
-      break;
-    }
   // Else, fall through...
   default:
     return addError("Syntax error: value, object or array expected.", token);
@@ -434,11 +422,6 @@ bool Reader::readObject(Token& /*tokenStart*/) {
     if (tokenName.type_ == tokenString) {
       if (!decodeString(tokenName, name))
         return recoverFromError(tokenObjectEnd);
-    } else if (tokenName.type_ == tokenNumber && features_.allowNumericKeys_) {
-      Value numberName;
-      if (!decodeNumber(tokenName, numberName))
-        return recoverFromError(tokenObjectEnd);
-      name = numberName.asString();
     } else {
       break;
     }
@@ -854,8 +837,6 @@ CharReader* CharReaderBuilder::newCharReader() const
   Features features = Features::all();
   features.allowComments_ = settings_["allowComments"].asBool();
   features.strictRoot_ = settings_["strictRoot"].asBool();
-  features.allowDroppedNullPlaceholders_ = settings_["allowDroppedNullPlaceholders"].asBool();
-  features.allowNumericKeys_ = settings_["allowNumericKeys"].asBool();
   return new OldReader(collectComments, features);
 }
 static void getValidReaderKeys(std::set<std::string>* valid_keys)
@@ -864,8 +845,6 @@ static void getValidReaderKeys(std::set<std::string>* valid_keys)
   valid_keys->insert("collectComments");
   valid_keys->insert("allowComments");
   valid_keys->insert("strictRoot");
-  valid_keys->insert("allowDroppedNullPlaceholders");
-  valid_keys->insert("allowNumericKeys");
 }
 bool CharReaderBuilder::validate(Json::Value* invalid) const
 {
@@ -891,8 +870,6 @@ void CharReaderBuilder::strictMode(Json::Value* settings)
 //! [CharReaderBuilderStrictMode]
   (*settings)["allowComments"] = false;
   (*settings)["strictRoot"] = true;
-  (*settings)["allowDroppedNullPlaceholders"] = false;
-  (*settings)["allowNumericKeys"] = false;
 //! [CharReaderBuilderStrictMode]
 }
 // static
@@ -902,8 +879,6 @@ void CharReaderBuilder::setDefaults(Json::Value* settings)
   (*settings)["collectComments"] = true;
   (*settings)["allowComments"] = true;
   (*settings)["strictRoot"] = false;
-  (*settings)["allowDroppedNullPlaceholders"] = false;
-  (*settings)["allowNumericKeys"] = false;
 //! [CharReaderBuilderDefaults]
 }
 
